@@ -20,5 +20,8 @@ pub enum AppError {
     MakerOrderWithoutLimitPrice,
 
     #[error("Order is over filled.")]
-    OrderOverFilled
+    OrderOverFilled,
+
+    #[error("Order with exact same ID is already booked.")]
+    OrderIdDuplication
 }

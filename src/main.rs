@@ -1,5 +1,5 @@
-pub mod common;
 pub mod balance;
+pub mod common;
 pub mod engine;
 
 fn main() {
