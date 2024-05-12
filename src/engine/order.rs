@@ -37,6 +37,30 @@ pub struct Order {
 }
 
 impl Order {
+    pub fn new_limit(side: OrderSide, limit_price: OrderPrice, quantity: OrderQuantity) -> Self {
+        Self {
+            id: 0,
+            type_: OrderType::Limit {
+                price: limit_price
+            },
+            side,
+            quantity,
+            filled_quantity: Decimal::zero(),
+            status: OrderStatus::Open
+        }
+    }
+
+    pub fn new_market(side: OrderSide, quantity: OrderQuantity) -> Self {
+        Self {
+            id: 0,
+            type_: OrderType::Market,
+            side,
+            quantity,
+            filled_quantity: Decimal::zero(),
+            status: OrderStatus::Open
+        }
+    }
+
     pub fn get_id(&self) -> OrderId {
         self.id
     }
