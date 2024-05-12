@@ -1,6 +1,6 @@
 use crate::{balance::UserId, common::errors::AppResult};
 
-use super::{order::{Order, OrderId, OrderPrice, OrderQuantity, OrderSide, OrderType}, orderbook::Orderbook};
+use super::{order::{Order, OrderId, OrderPrice, OrderQuantity, OrderSide}, orderbook::Orderbook};
 
 pub type PairId = u32;
 
