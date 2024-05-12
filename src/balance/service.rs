@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use rust_decimal::Decimal;
 
-use crate::common::errors::{AppError, AppResult};
+use crate::common::{errors::{AppError, AppResult}, time::{Time, Timestamp}};
 
 use super::{AssetId, BalanceSourceExector, BalanceType, UserId};
 
@@ -35,7 +35,8 @@ pub struct ChangeBalanceOutput {
     pub amount: Decimal,
     pub total_balance: Decimal,
     pub available_balance: Decimal,
-    pub frozen_balance: Decimal
+    pub frozen_balance: Decimal,
+    pub created_at: Timestamp
 }
 
 pub struct BalanceService {
@@ -74,7 +75,8 @@ impl BalanceService {
             amount: input.amount,
             total_balance: balance_status.total,
             available_balance: balance_status.available,
-            frozen_balance: balance_status.frozen
+            frozen_balance: balance_status.frozen,
+            created_at: Time::get_current_timestamp()
         })
     }
 }
