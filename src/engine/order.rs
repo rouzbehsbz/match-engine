@@ -81,4 +81,11 @@ impl Order {
             _ => false
         }
     }
+
+    pub fn is_bookable(&self) -> bool {
+        match self.type_ {
+            OrderType::Limit { .. } => true,
+            OrderType::Market { .. } => false,
+        }
+    }
 }

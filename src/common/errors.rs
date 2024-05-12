@@ -23,5 +23,8 @@ pub enum AppError {
     OrderOverFilled,
 
     #[error("Order with exact same ID is already booked.")]
-    OrderIdDuplication
+    OrderIdDuplication,
+
+    #[error("Order with this ID does'nt exists.")]
+    OrderIdNotFound
 }

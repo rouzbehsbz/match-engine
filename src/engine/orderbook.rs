@@ -221,6 +221,11 @@ impl Orderbook {
             self.remove_drained_orderbook_level(&taker_order)
         }
 
+        if !taker_order.is_closed() && taker_order.is_bookable() {
+            self.bids.insert(&taker_order)?;
+            self.orders.insert(taker_order.get_id(), taker_order);
+        }
+
         Ok(MatchOrderOutput {
             trades
         })
@@ -275,6 +280,11 @@ impl Orderbook {
             self.remove_drained_orderbook_level(&taker_order)
         }
 
+        if !taker_order.is_closed() && taker_order.is_bookable() {
+            self.bids.insert(&taker_order)?;
+            self.orders.insert(taker_order.get_id(), taker_order);
+        }
+
         Ok(MatchOrderOutput {
             trades
         })   
@@ -298,8 +308,22 @@ impl Orderbook {
             }
         }
     }
+
+    pub fn handle_cancel(&mut self, order_id: OrderId) -> AppResult<()> {
+        let order = self.
+            orders
+            .remove(&order_id)
+            .ok_or(AppError::OrderIdNotFound)?;
+
+        match order.get_side() {
+            OrderSide::Ask => self.asks.remove(&order)?,
+            OrderSide::Bid => self.bids.remove(&order)?
+        }
+
+        Ok(())
+    }
 }
 
 pub struct MatchOrderOutput {
-    trades: Vec<Trade>,
+    pub trades: Vec<Trade>,
 }
