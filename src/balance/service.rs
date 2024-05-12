@@ -62,6 +62,8 @@ impl BalanceService {
             if total_balance.lt(&abs_amount) {
                 return Err(AppError::UserBalanceExceeds)
             }
+
+            self.source.decrease(input.user_id, input.balance_type, input.asset_id, abs_amount);
         }
 
         let balance_status = self.source.get_status(input.user_id, input.asset_id);
