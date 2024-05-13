@@ -174,6 +174,7 @@ impl Orderbook {
 
     pub fn match_bid_order(&mut self, mut taker_order: Order) -> AppResult<MatchOrderOutput> {
         let mut trades: Vec<Trade> = vec![];
+        let mut filled_orders: Vec<Order> = vec![];
         let mut drained_price_levels = 0;
 
         for (_, price_level) in self.asks.iter_mut() {
@@ -182,7 +183,7 @@ impl Orderbook {
             }
 
             let mut total_traded_quantity = Decimal::zero();
-            let mut filled_orders = 0;
+            let mut filled_orders_count = 0;
 
             for order_id in price_level.order_ids.iter_mut() {
                 let maker_order = self
@@ -200,14 +201,17 @@ impl Orderbook {
 
                 total_traded_quantity += traded_quantity;
 
+                maker_order.decrease_frozen_amount(traded_quantity)?;
+
                 if maker_order.is_closed() {
-                    filled_orders += 1;
+                    filled_orders_count += 1;
+                    filled_orders.push(maker_order.clone());
                 }
             }
 
             price_level.quantity -= total_traded_quantity;
 
-            for _ in 0..filled_orders {
+            for _ in 0..filled_orders_count {
                 price_level.pop_front_order_id()
                     .and_then(|order_id| self.orders.remove(&order_id));
             }
@@ -222,17 +226,22 @@ impl Orderbook {
         }
 
         if !taker_order.is_closed() && taker_order.is_bookable() {
+            taker_order.set_frozen_amount()?;
+
             self.bids.insert(&taker_order)?;
             self.orders.insert(taker_order.get_id(), taker_order);
         }
 
         Ok(MatchOrderOutput {
+            taker_order: taker_order.clone(),
+            filled_orders,
             trades
         })
     }
 
     pub fn match_ask_order(&mut self, mut taker_order: Order) -> AppResult<MatchOrderOutput> {
         let mut trades: Vec<Trade> = vec![];
+        let mut filled_orders: Vec<Order> = vec![];
         let mut drained_price_levels = 0;
 
         for (_, price_level) in self.bids.iter_mut() {
@@ -241,7 +250,7 @@ impl Orderbook {
             }
 
             let mut total_traded_quantity = Decimal::zero();
-            let mut filled_orders = 0;
+            let mut filled_orders_count = 0;
 
             for order_id in price_level.order_ids.iter_mut() {
                 let maker_order = self
@@ -259,14 +268,17 @@ impl Orderbook {
 
                 total_traded_quantity += traded_quantity;
 
+                maker_order.decrease_frozen_amount(traded_quantity)?;
+
                 if maker_order.is_closed() {
-                    filled_orders += 1;
+                    filled_orders_count += 1;
+                    filled_orders.push(maker_order.clone())
                 }
             }
 
             price_level.quantity -= total_traded_quantity;
 
-            for _ in 0..filled_orders {
+            for _ in 0..filled_orders_count {
                 price_level.pop_front_order_id()
                     .and_then(|order_id| self.orders.remove(&order_id));
             }
@@ -281,13 +293,17 @@ impl Orderbook {
         }
 
         if !taker_order.is_closed() && taker_order.is_bookable() {
+            taker_order.set_frozen_amount()?;
+
             self.bids.insert(&taker_order)?;
             self.orders.insert(taker_order.get_id(), taker_order);
         }
 
         Ok(MatchOrderOutput {
+            taker_order: taker_order.clone(),
+            filled_orders,
             trades
-        })   
+        })
     }
 
     pub fn handle_create(&mut self, order: Order) -> AppResult<MatchOrderOutput> {
@@ -325,5 +341,7 @@ impl Orderbook {
 }
 
 pub struct MatchOrderOutput {
-    pub trades: Vec<Trade>,
+    pub taker_order: Order,
+    pub filled_orders: Vec<Order>,
+    pub trades: Vec<Trade>
 }

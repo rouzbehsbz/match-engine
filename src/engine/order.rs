@@ -1,11 +1,12 @@
 use rust_decimal::{prelude::Zero, Decimal};
 
-use crate::common::errors::{AppError, AppResult};
+use crate::{balance::{AssetId, UserId}, common::errors::{AppError, AppResult}};
 
 pub type OrderId = u64;
 pub type OrderPrice = Decimal;
 pub type OrderQuantity = Decimal;
 
+#[derive(Clone, Copy)]
 pub enum OrderType {
     Limit {
         price: OrderPrice
@@ -19,6 +20,7 @@ pub enum OrderSide {
     Bid
 }
 
+#[derive(Clone, Copy)]
 pub enum OrderStatus {
     Open,
     PartiallyFilled,
@@ -27,37 +29,69 @@ pub enum OrderStatus {
     Filled
 }
 
+#[derive(Clone, Copy)]
 pub struct Order {
     id: OrderId,
+    user_id: UserId,
+    base_asset_id: AssetId,
+    quote_asset_id: AssetId,
     type_: OrderType,
     side: OrderSide,
     quantity: Decimal,
     filled_quantity: Decimal,
+    frozen_amount: Decimal,
     status: OrderStatus
 }
 
 impl Order {
-    pub fn new_limit(side: OrderSide, limit_price: OrderPrice, quantity: OrderQuantity) -> Self {
+    pub fn new_limit(user_id: UserId, base_asset_id: AssetId, quote_asset_id: AssetId, side: OrderSide, limit_price: OrderPrice, quantity: OrderQuantity) -> Self {
         Self {
             id: 0,
+            user_id,
+            base_asset_id,
+            quote_asset_id,
             type_: OrderType::Limit {
                 price: limit_price
             },
             side,
             quantity,
             filled_quantity: Decimal::zero(),
+            frozen_amount: Decimal::zero(),
             status: OrderStatus::Open
         }
     }
 
-    pub fn new_market(side: OrderSide, quantity: OrderQuantity) -> Self {
+    pub fn new_market(user_id: UserId, base_asset_id: AssetId, quote_asset_id: AssetId, side: OrderSide, quantity: OrderQuantity) -> Self {
         Self {
             id: 0,
+            user_id,
+            base_asset_id,
+            quote_asset_id,
             type_: OrderType::Market,
             side,
             quantity,
             filled_quantity: Decimal::zero(),
+            frozen_amount: Decimal::zero(),
             status: OrderStatus::Open
+        }
+    }
+
+    pub fn get_user_id(&self) -> UserId {
+        self.user_id
+    }
+
+    pub fn get_base_asset_id(&self) -> AssetId {
+        self.base_asset_id
+    }
+
+    pub fn get_quote_asset_id(&self) -> AssetId {
+        self.quote_asset_id
+    }
+
+    pub fn get_asset_id(&self) -> AssetId {
+        match self.get_side() {
+            OrderSide::Ask => self.get_asset_id(),
+            OrderSide::Bid => self.get_quote_asset_id()
         }
     }
 
@@ -89,7 +123,7 @@ impl Order {
             return Err(AppError::OrderOverFilled);
         }
 
-        self.quantity += quantity;
+        self.filled_quantity += quantity;
         self.status = if self.filled_quantity == self.quantity {
             OrderStatus::Filled
         } else {
@@ -111,5 +145,43 @@ impl Order {
             OrderType::Limit { .. } => true,
             OrderType::Market { .. } => false,
         }
+    }
+
+    pub fn get_frozen_amount(&self) -> Decimal {
+        self.frozen_amount
+    }
+
+    pub fn decrease_frozen_amount(&mut self, traded_quantity: OrderQuantity) -> AppResult<()> { 
+        match self.get_side() {
+            OrderSide::Ask => {
+                self.frozen_amount -= traded_quantity
+            },
+            OrderSide::Bid => {
+                let limit_price = self
+                    .get_limit_price()
+                    .ok_or(AppError::OrderInavlidFrozenAmount)?;
+
+                self.frozen_amount -= traded_quantity * limit_price
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn set_frozen_amount(&mut self) -> AppResult<()> {
+        match self.get_side() {
+            OrderSide::Ask => {
+                self.frozen_amount = self.get_remaining_quantity()
+            },
+            OrderSide::Bid => {
+                let limit_price = self
+                    .get_limit_price()
+                    .ok_or(AppError::OrderInavlidFrozenAmount)?;
+
+                self.frozen_amount = self.get_remaining_quantity() * limit_price
+            }
+        }
+
+        Ok(())
     }
 }

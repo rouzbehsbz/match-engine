@@ -26,5 +26,8 @@ pub enum AppError {
     OrderIdDuplication,
 
     #[error("Order with this ID does'nt exists.")]
-    OrderIdNotFound
+    OrderIdNotFound,
+
+    #[error("Order amount without limit price can't be freeze or unfreeze.")]
+    OrderInavlidFrozenAmount
 }
