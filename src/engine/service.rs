@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use crate::{balance::{service::{BalanceService, BusinessType, ChangeBalaneInput}, AssetId, BalanceType, UserId}, common::errors::AppResult};
+use rust_decimal::{prelude::Zero, Decimal};
+
+use crate::{balance::{service::{BalanceService, BusinessType, ChangeBalaneInput}, AssetId, BalanceType, UserId}, common::errors::{AppError, AppResult}};
 
 use super::{order::{Order, OrderId, OrderPrice, OrderQuantity, OrderSide}, orderbook::Orderbook, trade::Trade};
 
@@ -9,6 +11,9 @@ pub type PairId = u32;
 pub struct Engine {
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
+    is_market_trade_enabled: bool,
+    min_quantity_allowed: OrderQuantity,
+
     orderbook: Orderbook,
     balance_service: Arc<BalanceService>
 }
@@ -19,7 +24,10 @@ impl Engine {
             base_asset_id,
             quote_asset_id,
             orderbook: Orderbook::new(),
-            balance_service
+            balance_service,
+
+            is_market_trade_enabled: true,
+            min_quantity_allowed: Decimal::zero()
         }
     }
 
@@ -125,11 +133,58 @@ impl Engine {
         Ok(())
     }
 
+    pub fn check_new_order_input(&self, order: &Order) -> AppResult<()> {
+        if order.get_limit_price().is_none() && !self.is_market_trade_enabled {
+            return Err(AppError::MarketTradeDisbaled);
+        }
+
+        if order.get_quantity().lt(&self.min_quantity_allowed) {
+            return Err(AppError::MarketMinimumAllowedQuantityExceeds)
+        }
+
+        if let Some(limit_price) = order.get_limit_price() {
+            if limit_price.is_zero() {
+                return Err(AppError::LimitOrderInvalidPrice);
+            }
+        }
+        else {
+            match order.get_side() {
+                OrderSide::Ask => {
+                    if self.orderbook.is_bids_empty() {
+                        return Err(AppError::CounterOrderbooksIsEmpty)
+                    }
+                }
+                OrderSide::Bid => {
+                    if self.orderbook.is_asks_empty() {
+                        return Err(AppError::CounterOrderbooksIsEmpty)
+                    }
+                }
+            }
+        }
+
+        match order.get_side() {
+            OrderSide::Ask => {
+                if !self.balance_service.is_available_balance_enough(order.get_user_id(), order.get_base_asset_id(), order.get_quantity()) {
+                    return Err(AppError::UserBalanceExceeds)
+                }
+            }
+            OrderSide::Bid => {
+                if !self.balance_service.is_available_balance_enough(order.get_user_id(), order.get_quote_asset_id(), order.get_amount()?) {
+                    return Err(AppError::UserBalanceExceeds)
+                }
+            }
+        }
+
+        Ok(())
+    }
+
     pub fn process_new_order(&mut self, user_id: UserId, limit_price: Option<OrderPrice>, quantity: OrderQuantity, side: OrderSide) -> AppResult<()> {
         let order = match limit_price {
             Some(limit_price) => Order::new_limit(user_id, self.base_asset_id, self.quote_asset_id, side, limit_price, quantity),
             None => Order::new_market(user_id, self.base_asset_id, self.quote_asset_id, side, quantity)
         };
+
+        self.check_new_order_input(&order)?;
 
         let match_result = self.orderbook.handle_create(order)?;
 

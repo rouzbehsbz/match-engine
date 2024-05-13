@@ -50,6 +50,16 @@ impl BalanceService {
         }
     }
 
+    pub fn is_available_balance_enough(&self, user_id: UserId, asset_id: AssetId, amount: Decimal) -> bool {
+        let balance = self.source.get(user_id, BalanceType::Available, asset_id);
+
+        if balance.lt(&amount) {
+            return false;
+        }
+
+        true
+    }
+
     pub fn change_balance(&self, input: ChangeBalaneInput) -> AppResult<ChangeBalanceOutput> {
         let abs_amount = input.amount.abs();
 

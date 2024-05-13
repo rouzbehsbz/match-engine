@@ -307,9 +307,9 @@ impl Orderbook {
     }
 
     pub fn handle_create(&mut self, order: Order) -> AppResult<MatchOrderOutput> {
-        if self.orders.contains_key(&order.get_id()) {
-            return Err(AppError::OrderIdDuplication)
-        }
+        // if self.orders.contains_key(&order.get_id()) {
+        //     return Err(AppError::OrderIdDuplication)
+        // }
 
         match order.get_side() {
             OrderSide::Ask => {
@@ -337,6 +337,14 @@ impl Orderbook {
         }
 
         Ok(())
+    }
+
+    pub fn is_asks_empty(&self) -> bool {
+        self.asks.is_empty()
+    }
+
+    pub fn is_bids_empty(&self) -> bool {
+        self.bids.is_empty()
     }
 }
 

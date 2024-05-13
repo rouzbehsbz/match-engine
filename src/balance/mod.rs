@@ -12,6 +12,7 @@ pub enum BalanceType {
     Frozen
 }
 
+#[derive(Debug)]
 pub struct BalanceStatus {
     pub total: Decimal,
     pub available: Decimal,

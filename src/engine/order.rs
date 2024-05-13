@@ -5,6 +5,7 @@ use crate::{balance::{AssetId, UserId}, common::errors::{AppError, AppResult}};
 pub type OrderId = u64;
 pub type OrderPrice = Decimal;
 pub type OrderQuantity = Decimal;
+pub type OrderAmount = Decimal;
 
 #[derive(Clone, Copy)]
 pub enum OrderType {
@@ -112,6 +113,17 @@ impl Order {
 
     pub fn get_remaining_quantity(&self) -> OrderQuantity {
         self.quantity - self.filled_quantity
+    }
+
+    pub fn get_quantity(&self) -> OrderQuantity {
+        self.quantity
+    }
+
+    pub fn get_amount(&self) -> AppResult<OrderAmount> {
+        let limit_price = self.get_limit_price()
+            .ok_or(AppError::InvalidMarketOrderAmount)?;
+
+        Ok(self.get_quantity() * limit_price)
     }
 
     pub fn get_traded_quantity(&self, matched_order: &Order) -> OrderQuantity {

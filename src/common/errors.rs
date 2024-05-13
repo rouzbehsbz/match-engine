@@ -29,5 +29,21 @@ pub enum AppError {
     OrderIdNotFound,
 
     #[error("Order amount without limit price can't be freeze or unfreeze.")]
-    OrderInavlidFrozenAmount
+    OrderInavlidFrozenAmount,
+
+    #[error("Market trade is disabled for this pair.")]
+    MarketTradeDisbaled,
+
+    #[error("Order quantity must be greater than minimum market quantity amount.")]
+    MarketMinimumAllowedQuantityExceeds,
+
+    #[error("Order limit price is invalid.")]
+    LimitOrderInvalidPrice,
+
+    #[error("Counter orderbook is empty.")]
+    CounterOrderbooksIsEmpty,
+
+    #[error("Order amount for makrket order is invalid.")]
+    InvalidMarketOrderAmount
+    
 }
