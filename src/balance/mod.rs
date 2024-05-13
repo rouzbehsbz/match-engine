@@ -1,11 +1,12 @@
 use rust_decimal::Decimal;
 
 pub mod service;
+pub mod repositories;
 
 pub type UserId = u32;
 pub type AssetId = u32;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum BalanceType {
     Available,
     Frozen
