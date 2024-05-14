@@ -1,7 +1,5 @@
 use std::sync::Arc;
 
-use rust_decimal::{prelude::Zero, Decimal};
-
 use crate::{
     balance::{
         service::{BalanceService, BusinessType},
@@ -247,7 +245,7 @@ impl Market {
 
     pub fn get_orderbook_depth(&self) -> (OrderbookDepth, OrderbookDepth) {
         let asks_depth = self.orderbook.get_asks_depth();
-        let bids_depth = self.orderbook.get_asks_depth();
+        let bids_depth = self.orderbook.get_bids_depth();
 
         (asks_depth, bids_depth)
     }

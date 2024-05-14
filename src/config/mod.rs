@@ -5,12 +5,12 @@ use crate::{balance::AssetId, engine::models::market::PairId};
 
 pub mod repositories;
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Config {
     pub markets: Vec<MarketConfig>
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct MarketConfig {
     pub pair_id: PairId,
     pub base_asset_id: AssetId,

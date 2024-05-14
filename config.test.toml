@@ -1,9 +1,6 @@
-[[pairs]]
-id = 1
-is_market_trade_enabled = true
-min_allowed_quantity = 0
-
-[[pairs]]
-id = 2
+[[markets]]
+pair_id = 1
+base_asset_id = 1
+quote_asset_id = 2
 is_market_trade_enabled = true
 min_allowed_quantity = 0

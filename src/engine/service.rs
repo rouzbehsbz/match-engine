@@ -70,6 +70,8 @@ impl EngineService {
     ) -> AppResult<()> {
         if let Some(market) = self.markets.try_write().unwrap().get_mut(&pair_id) {
             market.process_new_order(user_id, limit_price, quantity, side)?;
+
+            return Ok(())
         }
 
         Err(AppError::MarketNotFound)

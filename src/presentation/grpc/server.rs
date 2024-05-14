@@ -26,12 +26,12 @@ pub mod match_engine {
     tonic::include_proto!("match_engine");
 }
 
-pub struct MatchEngineController {
+pub struct TradeController {
     engine_service: Arc<EngineService>,
     balance_service: Arc<BalanceService>,
 }
 
-impl MatchEngineController {
+impl TradeController {
     pub fn new(engine_service: Arc<EngineService>, balance_service: Arc<BalanceService>) -> Self {
         Self {
             engine_service,
@@ -41,7 +41,7 @@ impl MatchEngineController {
 }
 
 #[tonic::async_trait]
-impl Trade for MatchEngineController {
+impl Trade for TradeController {
     async fn get_user_balance(
         &self,
         request: Request<GetUserBalanceRequest>,
@@ -72,7 +72,7 @@ impl Trade for MatchEngineController {
                 BusinessType::Withdraw,
                 1,
                 BalanceType::Available,
-                amount,
+                -amount,
             )
             .unwrap();
 
@@ -90,7 +90,7 @@ impl Trade for MatchEngineController {
                 BusinessType::Deposit,
                 1,
                 BalanceType::Available,
-                -amount,
+                amount,
             )
             .unwrap();
 
