@@ -4,11 +4,11 @@ use rust_decimal::{prelude::Zero, Decimal};
 
 use crate::{balance::{service::{BalanceService, BusinessType, ChangeBalaneInput}, AssetId, BalanceType, UserId}, common::errors::{AppError, AppResult}};
 
-use super::{order::{Order, OrderId, OrderPrice, OrderQuantity, OrderSide}, orderbook::Orderbook, trade::Trade};
+use super::{order::{Order, OrderPrice, OrderQuantity, OrderSide}, orderbook::Orderbook, trade::Trade};
 
 pub type PairId = u32;
 
-pub struct Engine {
+pub struct Market {
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
     is_market_trade_enabled: bool,
@@ -18,7 +18,7 @@ pub struct Engine {
     balance_service: Arc<BalanceService>
 }
 
-impl Engine {
+impl Market {
     pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId, balance_service: Arc<BalanceService>) -> Self {
         Self {
             base_asset_id,

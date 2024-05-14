@@ -1,7 +1,7 @@
-use std::{cmp::Reverse, collections::{btree_map::{Entry, IterMut}, BTreeMap, HashMap, VecDeque}, ops::{Deref, DerefMut}};
+use std::{cmp::Reverse, collections::{btree_map::Entry, BTreeMap, HashMap, VecDeque}, ops::{Deref, DerefMut}};
 use rust_decimal::{prelude::Zero, Decimal};
 use crate::common::errors::{AppError, AppResult};
-use super::{order::{self, Order, OrderId, OrderPrice, OrderQuantity, OrderSide}, trade::Trade};
+use super::{order::{Order, OrderId, OrderPrice, OrderQuantity, OrderSide}, trade::Trade};
 
 pub struct OrderbookWrapper<T>(T);
 
