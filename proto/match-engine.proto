@@ -3,5 +3,59 @@ syntax = "proto3"
 package match_engine;
 
 service Engine {
+    rpc GetUserBalance(GetUserBalanceRequest) returns (GetUserBalanceResponse);
+    rpc ChangeUserBalance(ChangeUserBalanceRequest) returns (ChangeUserBalanceResponse);
+    rpc PlaceOrder(PlaceOrderRequest) returns (PlaceOrderResponse);
+    rpc GetMarketOrderbook(GetMarketOrderbookRequest) returns (GetMarketOrderbookResponse);
+}
 
+enum OrderSide {
+    ASK = 1;
+    BID = 2;
+}
+
+message PriceLevel {
+    string price = 1;
+    string quantity = 2;
+}
+
+message GetUserBalanceRequest {
+    uint32 user_id = 1;
+    uint32 asset_id = 2;
+}
+
+message GetUserBalanceResponse {
+    string total = 1;
+    string available = 2;
+    string frozen = 3;
+}
+
+message ChangeUserBalanceRequest {
+    uint32 user_id = 1;
+    uint32 asset_id = 2;
+    string amount = 3;
+}
+
+message ChangeUserBalanceResponse {}
+
+message PlaceOrderRequest {
+    uint32 user_id = 1;
+    uint32 pair_id = 2;
+    OrderSide side = 3;
+    string limit_price = 4;
+    string quantity = 5;
+}
+
+message PlaceOrderResponse {
+    uint64 order_id = 1;
+}
+
+message GetMarketOrderbookRequest {
+    uint32 pair_id = 1;
+    uint32 depth = 2;
+}
+
+message GetMarketOrderbookResponse {
+    PriceLevel bids repeated
+    PriceLevel asks repeated
 }
