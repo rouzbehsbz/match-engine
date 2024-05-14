@@ -4,7 +4,7 @@ use rust_decimal::{prelude::Zero, Decimal};
 
 use crate::{balance::UserId, common::errors::{AppError, AppResult}};
 
-use super::{market::{Market, PairId}, order::{OrderPrice, OrderSide}, orderbook::OrderbookDepth};
+use super::models::{market::{Market, PairId}, order::{OrderPrice, OrderSide}, orderbook::OrderbookDepth};
 
 pub type Markets = HashMap<PairId, Market>;
 

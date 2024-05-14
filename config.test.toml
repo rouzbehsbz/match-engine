@@ -1,0 +1,9 @@
+[[pairs]]
+id = 1
+is_market_trade_enabled = true
+min_allowed_quantity = 0
+
+[[pairs]]
+id = 2
+is_market_trade_enabled = true
+min_allowed_quantity = 0

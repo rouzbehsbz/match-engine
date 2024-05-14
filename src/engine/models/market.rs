@@ -22,7 +22,7 @@ pub struct Market {
     base_asset_id: AssetId,
     quote_asset_id: AssetId,
     is_market_trade_enabled: bool,
-    min_quantity_allowed: OrderQuantity,
+    min_allowed_quantity: OrderQuantity,
 
     orderbook: Orderbook,
     balance_service: Arc<BalanceService>,
@@ -41,7 +41,7 @@ impl Market {
             balance_service,
 
             is_market_trade_enabled: true,
-            min_quantity_allowed: Decimal::zero(),
+            min_allowed_quantity: Decimal::zero(),
         }
     }
 
@@ -152,7 +152,7 @@ impl Market {
             return Err(AppError::MarketTradeDisbaled);
         }
 
-        if order.get_quantity().lt(&self.min_quantity_allowed) {
+        if order.get_quantity().lt(&self.min_allowed_quantity) {
             return Err(AppError::MarketMinimumAllowedQuantityExceeds);
         }
 

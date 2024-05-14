@@ -6,7 +6,7 @@ use tonic::{Request, Response};
 use crate::{balance::{
     service::{BalanceService, BusinessType},
     BalanceType,
-}, engine::{order::{OrderPrice, OrderSide}, service::EngineService}};
+}, engine::{models::order::{OrderPrice, OrderSide}, service::EngineService}};
 
 use self::match_engine::{
     trade_server::Trade, DepositRequest, DepositResponse, GetMarketOrderbookRequest, GetMarketOrderbookResponse, GetUserBalanceRequest, GetUserBalanceResponse, PlaceOrderRequest, PlaceOrderResponse, PriceLevel, WithdrawRequest, WithdrawResponse
