@@ -32,6 +32,8 @@ impl Market {
     pub fn new(
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
+        is_market_trade_enabled: bool,
+        min_allowed_quantity: OrderQuantity,
         balance_service: Arc<BalanceService>,
     ) -> Self {
         Self {
@@ -40,8 +42,8 @@ impl Market {
             orderbook: Orderbook::new(),
             balance_service,
 
-            is_market_trade_enabled: true,
-            min_allowed_quantity: Decimal::zero(),
+            is_market_trade_enabled,
+            min_allowed_quantity,
         }
     }
 
