@@ -2,9 +2,19 @@ use std::sync::Arc;
 
 use rust_decimal::{prelude::Zero, Decimal};
 
-use crate::{balance::{service::{BalanceService, BusinessType, ChangeBalaneInput}, AssetId, BalanceType, UserId}, common::errors::{AppError, AppResult}};
+use crate::{
+    balance::{
+        service::{BalanceService, BusinessType},
+        AssetId, BalanceType, UserId,
+    },
+    common::errors::{AppError, AppResult},
+};
 
-use super::{order::{Order, OrderPrice, OrderQuantity, OrderSide}, orderbook::Orderbook, trade::Trade};
+use super::{
+    order::{Order, OrderPrice, OrderQuantity, OrderSide},
+    orderbook::{Orderbook, OrderbookDepth},
+    trade::Trade,
+};
 
 pub type PairId = u32;
 
@@ -15,11 +25,15 @@ pub struct Market {
     min_quantity_allowed: OrderQuantity,
 
     orderbook: Orderbook,
-    balance_service: Arc<BalanceService>
+    balance_service: Arc<BalanceService>,
 }
 
 impl Market {
-    pub fn new(base_asset_id: AssetId, quote_asset_id: AssetId, balance_service: Arc<BalanceService>) -> Self {
+    pub fn new(
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        balance_service: Arc<BalanceService>,
+    ) -> Self {
         Self {
             base_asset_id,
             quote_asset_id,
@@ -27,30 +41,30 @@ impl Market {
             balance_service,
 
             is_market_trade_enabled: true,
-            min_quantity_allowed: Decimal::zero()
+            min_quantity_allowed: Decimal::zero(),
         }
     }
 
     pub fn freeze_user_balance(&self, order: &Order) -> AppResult<()> {
         let remaining_amount = order.get_frozen_amount();
 
-        self.balance_service.change_balance(ChangeBalaneInput {
-            user_id: order.get_user_id(),
-            asset_id: order.get_asset_id(),
-            business_type: BusinessType::Trade,
-            business_id: 1,
-            balance_type: BalanceType::Available,
-            amount: -remaining_amount
-        })?;
+        self.balance_service.change_balance(
+            order.get_user_id(),
+            order.get_asset_id(),
+            BusinessType::Trade,
+            1,
+            BalanceType::Available,
+            -remaining_amount,
+        )?;
 
-        self.balance_service.change_balance(ChangeBalaneInput {
-            user_id: order.get_user_id(),
-            asset_id: order.get_asset_id(),
-            business_type: BusinessType::Trade,
-            business_id: 1,
-            balance_type: BalanceType::Frozen,
-            amount: remaining_amount
-        })?;
+        self.balance_service.change_balance(
+            order.get_user_id(),
+            order.get_asset_id(),
+            BusinessType::Trade,
+            1,
+            BalanceType::Frozen,
+            remaining_amount,
+        )?;
 
         Ok(())
     }
@@ -58,23 +72,23 @@ impl Market {
     pub fn unfreeze_user_balance(&self, order: &Order) -> AppResult<()> {
         let remaining_amount = order.get_frozen_amount();
 
-        self.balance_service.change_balance(ChangeBalaneInput {
-            user_id: order.get_user_id(),
-            asset_id: order.get_asset_id(),
-            business_type: BusinessType::Trade,
-            business_id: 1,
-            balance_type: BalanceType::Available,
-            amount: -remaining_amount
-        })?;
+        self.balance_service.change_balance(
+            order.get_user_id(),
+            order.get_asset_id(),
+            BusinessType::Trade,
+            1,
+            BalanceType::Available,
+            -remaining_amount,
+        )?;
 
-        self.balance_service.change_balance(ChangeBalaneInput {
-            user_id: order.get_user_id(),
-            asset_id: order.get_asset_id(),
-            business_type: BusinessType::Trade,
-            business_id: 1,
-            balance_type: BalanceType::Frozen,
-            amount: remaining_amount
-        })?;
+        self.balance_service.change_balance(
+            order.get_user_id(),
+            order.get_asset_id(),
+            BusinessType::Trade,
+            1,
+            BalanceType::Frozen,
+            remaining_amount,
+        )?;
 
         Ok(())
     }
@@ -85,50 +99,50 @@ impl Market {
 
         let is_maker_order_bid = match trade.get_maker_order_side() {
             OrderSide::Ask => false,
-            OrderSide::Bid => true
+            OrderSide::Bid => true,
         };
 
-        self.balance_service.change_balance(ChangeBalaneInput {
-            user_id: bid_order.get_user_id(),
-            asset_id: bid_order.get_base_asset_id(),
-            business_type: BusinessType::Trade,
-            business_id: trade.get_id(),
-            balance_type: BalanceType::Available,
-            amount: trade.get_trade_quantity()
-        })?;
+        self.balance_service.change_balance(
+            bid_order.get_user_id(),
+            bid_order.get_base_asset_id(),
+            BusinessType::Trade,
+            trade.get_id(),
+            BalanceType::Available,
+            trade.get_trade_quantity(),
+        )?;
 
-        self.balance_service.change_balance(ChangeBalaneInput {
-            user_id: bid_order.get_user_id(),
-            asset_id: bid_order.get_quote_asset_id(),
-            business_type: BusinessType::Trade,
-            business_id: trade.get_id(),
-            balance_type: match is_maker_order_bid {
+        self.balance_service.change_balance(
+            bid_order.get_user_id(),
+            bid_order.get_quote_asset_id(),
+            BusinessType::Trade,
+            trade.get_id(),
+            match is_maker_order_bid {
                 true => BalanceType::Frozen,
-                false => BalanceType::Available
+                false => BalanceType::Available,
             },
-            amount: -trade.get_trade_amount()
-        })?;
+            -trade.get_trade_amount(),
+        )?;
 
-        self.balance_service.change_balance(ChangeBalaneInput {
-            user_id: ask_order.get_user_id(),
-            asset_id: ask_order.get_quote_asset_id(),
-            business_type: BusinessType::Trade,
-            business_id: trade.get_id(),
-            balance_type: BalanceType::Available,
-            amount: trade.get_trade_amount()
-        })?;
+        self.balance_service.change_balance(
+            ask_order.get_user_id(),
+            ask_order.get_quote_asset_id(),
+            BusinessType::Trade,
+            trade.get_id(),
+            BalanceType::Available,
+            trade.get_trade_amount(),
+        )?;
 
-        self.balance_service.change_balance(ChangeBalaneInput {
-            user_id: ask_order.get_user_id(),
-            asset_id: ask_order.get_base_asset_id(),
-            business_type: BusinessType::Trade,
-            business_id: trade.get_id(),
-            balance_type: match is_maker_order_bid {
+        self.balance_service.change_balance(
+            ask_order.get_user_id(),
+            ask_order.get_base_asset_id(),
+            BusinessType::Trade,
+            trade.get_id(),
+            match is_maker_order_bid {
                 true => BalanceType::Available,
-                false => BalanceType::Frozen
+                false => BalanceType::Frozen,
             },
-            amount: -trade.get_trade_quantity()
-        })?;
+            -trade.get_trade_quantity(),
+        )?;
 
         Ok(())
     }
@@ -139,24 +153,23 @@ impl Market {
         }
 
         if order.get_quantity().lt(&self.min_quantity_allowed) {
-            return Err(AppError::MarketMinimumAllowedQuantityExceeds)
+            return Err(AppError::MarketMinimumAllowedQuantityExceeds);
         }
 
         if let Some(limit_price) = order.get_limit_price() {
             if limit_price.is_zero() {
                 return Err(AppError::LimitOrderInvalidPrice);
             }
-        }
-        else {
+        } else {
             match order.get_side() {
                 OrderSide::Ask => {
                     if self.orderbook.is_bids_empty() {
-                        return Err(AppError::CounterOrderbooksIsEmpty)
+                        return Err(AppError::CounterOrderbooksIsEmpty);
                     }
                 }
                 OrderSide::Bid => {
                     if self.orderbook.is_asks_empty() {
-                        return Err(AppError::CounterOrderbooksIsEmpty)
+                        return Err(AppError::CounterOrderbooksIsEmpty);
                     }
                 }
             }
@@ -164,13 +177,21 @@ impl Market {
 
         match order.get_side() {
             OrderSide::Ask => {
-                if !self.balance_service.is_available_balance_enough(order.get_user_id(), order.get_base_asset_id(), order.get_quantity()) {
-                    return Err(AppError::UserBalanceExceeds)
+                if !self.balance_service.is_available_balance_enough(
+                    order.get_user_id(),
+                    order.get_base_asset_id(),
+                    order.get_quantity(),
+                ) {
+                    return Err(AppError::UserBalanceExceeds);
                 }
             }
             OrderSide::Bid => {
-                if !self.balance_service.is_available_balance_enough(order.get_user_id(), order.get_quote_asset_id(), order.get_amount()?) {
-                    return Err(AppError::UserBalanceExceeds)
+                if !self.balance_service.is_available_balance_enough(
+                    order.get_user_id(),
+                    order.get_quote_asset_id(),
+                    order.get_amount()?,
+                ) {
+                    return Err(AppError::UserBalanceExceeds);
                 }
             }
         }
@@ -178,10 +199,29 @@ impl Market {
         Ok(())
     }
 
-    pub fn process_new_order(&mut self, user_id: UserId, limit_price: Option<OrderPrice>, quantity: OrderQuantity, side: OrderSide) -> AppResult<()> {
+    pub fn process_new_order(
+        &mut self,
+        user_id: UserId,
+        limit_price: Option<OrderPrice>,
+        quantity: OrderQuantity,
+        side: OrderSide,
+    ) -> AppResult<()> {
         let order = match limit_price {
-            Some(limit_price) => Order::new_limit(user_id, self.base_asset_id, self.quote_asset_id, side, limit_price, quantity),
-            None => Order::new_market(user_id, self.base_asset_id, self.quote_asset_id, side, quantity)
+            Some(limit_price) => Order::new_limit(
+                user_id,
+                self.base_asset_id,
+                self.quote_asset_id,
+                side,
+                limit_price,
+                quantity,
+            ),
+            None => Order::new_market(
+                user_id,
+                self.base_asset_id,
+                self.quote_asset_id,
+                side,
+                quantity,
+            ),
         };
 
         self.check_new_order_input(&order)?;
@@ -201,5 +241,12 @@ impl Market {
         }
 
         Ok(())
+    }
+
+    pub fn get_orderbook_depth(&self) -> (OrderbookDepth, OrderbookDepth) {
+        let asks_depth = self.orderbook.get_asks_depth();
+        let bids_depth = self.orderbook.get_asks_depth();
+
+        (asks_depth, bids_depth)
     }
 }

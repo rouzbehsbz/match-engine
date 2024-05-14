@@ -1,6 +1,9 @@
 use rust_decimal::{prelude::Zero, Decimal};
 
-use crate::{balance::{AssetId, UserId}, common::errors::{AppError, AppResult}};
+use crate::{
+    balance::{AssetId, UserId},
+    common::errors::{AppError, AppResult},
+};
 
 pub type OrderId = u64;
 pub type OrderPrice = Decimal;
@@ -9,16 +12,14 @@ pub type OrderAmount = Decimal;
 
 #[derive(Clone, Copy)]
 pub enum OrderType {
-    Limit {
-        price: OrderPrice
-    },
-    Market
+    Limit { price: OrderPrice },
+    Market,
 }
 
 #[derive(Clone, Copy)]
 pub enum OrderSide {
     Ask,
-    Bid
+    Bid,
 }
 
 #[derive(Clone, Copy)]
@@ -27,7 +28,7 @@ pub enum OrderStatus {
     PartiallyFilled,
     Cancelled,
     Closed,
-    Filled
+    Filled,
 }
 
 #[derive(Clone, Copy)]
@@ -41,28 +42,39 @@ pub struct Order {
     quantity: Decimal,
     filled_quantity: Decimal,
     frozen_amount: Decimal,
-    status: OrderStatus
+    status: OrderStatus,
 }
 
 impl Order {
-    pub fn new_limit(user_id: UserId, base_asset_id: AssetId, quote_asset_id: AssetId, side: OrderSide, limit_price: OrderPrice, quantity: OrderQuantity) -> Self {
+    pub fn new_limit(
+        user_id: UserId,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        side: OrderSide,
+        limit_price: OrderPrice,
+        quantity: OrderQuantity,
+    ) -> Self {
         Self {
             id: 0,
             user_id,
             base_asset_id,
             quote_asset_id,
-            type_: OrderType::Limit {
-                price: limit_price
-            },
+            type_: OrderType::Limit { price: limit_price },
             side,
             quantity,
             filled_quantity: Decimal::zero(),
             frozen_amount: Decimal::zero(),
-            status: OrderStatus::Open
+            status: OrderStatus::Open,
         }
     }
 
-    pub fn new_market(user_id: UserId, base_asset_id: AssetId, quote_asset_id: AssetId, side: OrderSide, quantity: OrderQuantity) -> Self {
+    pub fn new_market(
+        user_id: UserId,
+        base_asset_id: AssetId,
+        quote_asset_id: AssetId,
+        side: OrderSide,
+        quantity: OrderQuantity,
+    ) -> Self {
         Self {
             id: 0,
             user_id,
@@ -73,7 +85,7 @@ impl Order {
             quantity,
             filled_quantity: Decimal::zero(),
             frozen_amount: Decimal::zero(),
-            status: OrderStatus::Open
+            status: OrderStatus::Open,
         }
     }
 
@@ -92,7 +104,7 @@ impl Order {
     pub fn get_asset_id(&self) -> AssetId {
         match self.get_side() {
             OrderSide::Ask => self.get_asset_id(),
-            OrderSide::Bid => self.get_quote_asset_id()
+            OrderSide::Bid => self.get_quote_asset_id(),
         }
     }
 
@@ -103,7 +115,7 @@ impl Order {
     pub fn get_limit_price(&self) -> Option<OrderPrice> {
         match self.type_ {
             OrderType::Limit { price } => Some(price),
-            OrderType::Market => None
+            OrderType::Market => None,
         }
     }
 
@@ -120,14 +132,16 @@ impl Order {
     }
 
     pub fn get_amount(&self) -> AppResult<OrderAmount> {
-        let limit_price = self.get_limit_price()
+        let limit_price = self
+            .get_limit_price()
             .ok_or(AppError::InvalidMarketOrderAmount)?;
 
         Ok(self.get_quantity() * limit_price)
     }
 
     pub fn get_traded_quantity(&self, matched_order: &Order) -> OrderQuantity {
-        self.get_remaining_quantity().min(matched_order.get_remaining_quantity())
+        self.get_remaining_quantity()
+            .min(matched_order.get_remaining_quantity())
     }
 
     pub fn fill(&mut self, quantity: OrderQuantity) -> AppResult<()> {
@@ -148,7 +162,7 @@ impl Order {
     pub fn is_closed(&self) -> bool {
         match self.status {
             OrderStatus::Cancelled | OrderStatus::Closed | OrderStatus::Filled => true,
-            _ => false
+            _ => false,
         }
     }
 
@@ -163,11 +177,9 @@ impl Order {
         self.frozen_amount
     }
 
-    pub fn decrease_frozen_amount(&mut self, traded_quantity: OrderQuantity) -> AppResult<()> { 
+    pub fn decrease_frozen_amount(&mut self, traded_quantity: OrderQuantity) -> AppResult<()> {
         match self.get_side() {
-            OrderSide::Ask => {
-                self.frozen_amount -= traded_quantity
-            },
+            OrderSide::Ask => self.frozen_amount -= traded_quantity,
             OrderSide::Bid => {
                 let limit_price = self
                     .get_limit_price()
@@ -182,9 +194,7 @@ impl Order {
 
     pub fn set_frozen_amount(&mut self) -> AppResult<()> {
         match self.get_side() {
-            OrderSide::Ask => {
-                self.frozen_amount = self.get_remaining_quantity()
-            },
+            OrderSide::Ask => self.frozen_amount = self.get_remaining_quantity(),
             OrderSide::Bid => {
                 let limit_price = self
                     .get_limit_price()

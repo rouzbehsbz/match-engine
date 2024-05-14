@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use rust_decimal::Decimal;
 
-use crate::common::{errors::{AppError, AppResult}, time::{Time, Timestamp}};
+use crate::common::{
+    errors::{AppError, AppResult},
+    time::{Time, Timestamp},
+};
 
 use super::{AssetId, BalanceSourceExector, BalanceStatus, BalanceType, UserId};
 
@@ -12,19 +15,10 @@ pub type BalanceSource = Box<dyn BalanceSourceExector>;
 pub enum BusinessType {
     Withdraw,
     Deposit,
-    Trade
+    Trade,
 }
 
 pub type BusinessId = u64;
-
-pub struct ChangeBalaneInput {
-    pub user_id: UserId,
-    pub asset_id: AssetId,
-    pub business_type: BusinessType,
-    pub business_id: BusinessId,
-    pub balance_type: BalanceType,
-    pub amount: Decimal
-}
 
 pub struct ChangeBalanceOutput {
     pub user_id: UserId,
@@ -36,21 +30,24 @@ pub struct ChangeBalanceOutput {
     pub total_balance: Decimal,
     pub available_balance: Decimal,
     pub frozen_balance: Decimal,
-    pub created_at: Timestamp
+    pub created_at: Timestamp,
 }
 
 pub struct BalanceService {
-    source: Arc<BalanceSource>
+    source: Arc<BalanceSource>,
 }
 
 impl BalanceService {
     pub fn new(source: Arc<BalanceSource>) -> Self {
-        Self {
-            source
-        }
+        Self { source }
     }
 
-    pub fn is_available_balance_enough(&self, user_id: UserId, asset_id: AssetId, amount: Decimal) -> bool {
+    pub fn is_available_balance_enough(
+        &self,
+        user_id: UserId,
+        asset_id: AssetId,
+        amount: Decimal,
+    ) -> bool {
         let balance = self.source.get(user_id, BalanceType::Available, asset_id);
 
         if balance.lt(&amount) {
@@ -64,35 +61,44 @@ impl BalanceService {
         self.source.get_status(user_id, asset_id)
     }
 
-    pub fn change_balance(&self, input: ChangeBalaneInput) -> AppResult<ChangeBalanceOutput> {
-        let abs_amount = input.amount.abs();
+    pub fn change_balance(
+        &self,
+        user_id: UserId,
+        asset_id: AssetId,
+        business_type: BusinessType,
+        business_id: BusinessId,
+        balance_type: BalanceType,
+        amount: Decimal,
+    ) -> AppResult<ChangeBalanceOutput> {
+        let abs_amount = amount.abs();
 
-        if input.amount.is_sign_positive() {
-            self.source.increase(input.user_id, input.balance_type, input.asset_id, abs_amount);
-        }
-        else {
-            let total_balance = self.source.get(input.user_id, input.balance_type, input.asset_id);
+        if amount.is_sign_positive() {
+            self.source
+                .increase(user_id, balance_type, asset_id, abs_amount);
+        } else {
+            let total_balance = self.source.get(user_id, balance_type, asset_id);
 
             if total_balance.lt(&abs_amount) {
-                return Err(AppError::UserBalanceExceeds)
+                return Err(AppError::UserBalanceExceeds);
             }
 
-            self.source.decrease(input.user_id, input.balance_type, input.asset_id, abs_amount);
+            self.source
+                .decrease(user_id, balance_type, asset_id, abs_amount);
         }
 
-        let balance_status = self.source.get_status(input.user_id, input.asset_id);
+        let balance_status = self.source.get_status(user_id, asset_id);
 
-        Ok(ChangeBalanceOutput{
-            user_id: input.user_id,
-            asset_id: input.asset_id,
-            business_type: input.business_type,
-            business_id: input.business_id,
-            balance_type: input.balance_type,
-            amount: input.amount,
+        Ok(ChangeBalanceOutput {
+            user_id: user_id,
+            asset_id: asset_id,
+            business_type: business_type,
+            business_id: business_id,
+            balance_type: balance_type,
+            amount: amount,
             total_balance: balance_status.total,
             available_balance: balance_status.available,
             frozen_balance: balance_status.frozen,
-            created_at: Time::get_current_timestamp()
+            created_at: Time::get_current_timestamp(),
         })
     }
 }

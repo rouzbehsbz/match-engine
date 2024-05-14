@@ -8,36 +8,44 @@ use crate::balance::{AssetId, BalanceSourceExector, BalanceStatus, BalanceType, 
 pub struct BalancesKey {
     user_id: UserId,
     asset_id: AssetId,
-    type_: BalanceType
+    type_: BalanceType,
 }
 
 pub type Balances = HashMap<BalancesKey, Decimal>;
 
 pub struct MemoryBalanceManager {
-    balances: RwLock<Balances>
+    balances: RwLock<Balances>,
 }
 
 impl MemoryBalanceManager {
     pub fn new() -> Self {
         Self {
-            balances: RwLock::new(HashMap::new())
+            balances: RwLock::new(HashMap::new()),
         }
     }
 
     pub fn get_by_key(&self, key: &BalancesKey) -> Decimal {
-        *self.balances.try_read().unwrap().get(key).unwrap_or(&Decimal::zero())
+        *self
+            .balances
+            .try_read()
+            .unwrap()
+            .get(key)
+            .unwrap_or(&Decimal::zero())
     }
 
     pub fn set_by_key(&self, key: BalancesKey, amount: Decimal) {
         self.balances.try_write().unwrap().insert(key, amount);
     }
 
-    pub fn set(&self,  user_id: UserId, type_: BalanceType, asset_id: AssetId, amount: Decimal) {
-        self.set_by_key(BalancesKey {
-            user_id,
-            asset_id,
-            type_
-        }, amount);
+    pub fn set(&self, user_id: UserId, type_: BalanceType, asset_id: AssetId, amount: Decimal) {
+        self.set_by_key(
+            BalancesKey {
+                user_id,
+                asset_id,
+                type_,
+            },
+            amount,
+        );
     }
 }
 
@@ -46,7 +54,7 @@ impl BalanceSourceExector for MemoryBalanceManager {
         self.get_by_key(&BalancesKey {
             user_id,
             asset_id,
-            type_
+            type_,
         })
     }
 
@@ -65,7 +73,8 @@ impl BalanceSourceExector for MemoryBalanceManager {
     }
 
     fn get_total(&self, user_id: UserId, asset_id: AssetId) -> Decimal {
-        self.get(user_id, BalanceType::Available, asset_id) + self.get(user_id, BalanceType::Frozen, asset_id)
+        self.get(user_id, BalanceType::Available, asset_id)
+            + self.get(user_id, BalanceType::Frozen, asset_id)
     }
 
     fn get_status(&self, user_id: UserId, asset_id: AssetId) -> BalanceStatus {
@@ -76,7 +85,7 @@ impl BalanceSourceExector for MemoryBalanceManager {
         BalanceStatus {
             available,
             frozen,
-            total
+            total,
         }
     }
 }

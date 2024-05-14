@@ -8,6 +8,4 @@ pub mod presentation;
 //TODO: handle event sourcing
 //TODO: handle TIF for orderbook
 
-fn main() {
-
-}
+fn main() {}

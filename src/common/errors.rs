@@ -44,6 +44,5 @@ pub enum AppError {
     CounterOrderbooksIsEmpty,
 
     #[error("Order amount for makrket order is invalid.")]
-    InvalidMarketOrderAmount
-    
+    InvalidMarketOrderAmount,
 }

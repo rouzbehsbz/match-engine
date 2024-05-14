@@ -4,7 +4,8 @@ package match_engine;
 
 service Trade {
     rpc GetUserBalance(GetUserBalanceRequest) returns (GetUserBalanceResponse);
-    rpc ChangeUserBalance(ChangeUserBalanceRequest) returns (ChangeUserBalanceResponse);
+    rpc Withdraw(WithdrawRequest) returns (WithdrawResponse);
+    rpc Deposit(DepositRequest) returns (DepositResponse);
     rpc PlaceOrder(PlaceOrderRequest) returns (PlaceOrderResponse);
     rpc GetMarketOrderbook(GetMarketOrderbookRequest) returns (GetMarketOrderbookResponse);
 }
@@ -30,13 +31,21 @@ message GetUserBalanceResponse {
     string frozen = 3;
 }
 
-message ChangeUserBalanceRequest {
+message WithdrawRequest {
     uint32 user_id = 1;
     uint32 asset_id = 2;
     string amount = 3;
 }
 
-message ChangeUserBalanceResponse {}
+message WithdrawResponse {}
+
+message DepositRequest {
+    uint32 user_id = 1;
+    uint32 asset_id = 2;
+    string amount = 3;
+}
+
+message DepositResponse {}
 
 message PlaceOrderRequest {
     uint32 user_id = 1;

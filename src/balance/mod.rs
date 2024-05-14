@@ -1,7 +1,7 @@
 use rust_decimal::Decimal;
 
-pub mod service;
 pub mod repositories;
+pub mod service;
 
 pub type UserId = u32;
 pub type AssetId = u32;
@@ -9,14 +9,14 @@ pub type AssetId = u32;
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum BalanceType {
     Available,
-    Frozen
+    Frozen,
 }
 
 #[derive(Debug)]
 pub struct BalanceStatus {
     pub total: Decimal,
     pub available: Decimal,
-    pub frozen: Decimal
+    pub frozen: Decimal,
 }
 
 pub trait BalanceSourceExector: Send + Sync {

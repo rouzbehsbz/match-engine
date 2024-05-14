@@ -1,11 +1,18 @@
-use std::{cmp::Reverse, collections::{btree_map::Entry, BTreeMap, HashMap, VecDeque}, ops::{Deref, DerefMut}};
-use rust_decimal::{prelude::Zero, Decimal};
+use super::{
+    order::{Order, OrderId, OrderPrice, OrderQuantity, OrderSide},
+    trade::Trade,
+};
 use crate::common::errors::{AppError, AppResult};
-use super::{order::{Order, OrderId, OrderPrice, OrderQuantity, OrderSide}, trade::Trade};
+use rust_decimal::{prelude::Zero, Decimal};
+use std::{
+    cmp::Reverse,
+    collections::{btree_map::Entry, BTreeMap, HashMap, VecDeque},
+    ops::{Deref, DerefMut},
+};
 
 pub struct OrderbookWrapper<T>(T);
 
-impl <T> Deref for OrderbookWrapper<T> {
+impl<T> Deref for OrderbookWrapper<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -13,7 +20,7 @@ impl <T> Deref for OrderbookWrapper<T> {
     }
 }
 
-impl <T> DerefMut for OrderbookWrapper<T> {
+impl<T> DerefMut for OrderbookWrapper<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -46,8 +53,7 @@ impl OrderbookWrapper<BTreeMap<OrderPrice, PriceLevel>> {
 
         if price_level.get().order_ids.len() == 1 {
             price_level.remove();
-        }
-        else {
+        } else {
             let price_level = price_level.get_mut();
 
             price_level.remove(order);
@@ -84,8 +90,7 @@ impl OrderbookWrapper<BTreeMap<Reverse<OrderPrice>, PriceLevel>> {
 
         if price_level.get().order_ids.len() == 1 {
             price_level.remove();
-        }
-        else {
+        } else {
             let price_level = price_level.get_mut();
 
             price_level.remove(order);
@@ -98,7 +103,7 @@ impl OrderbookWrapper<BTreeMap<Reverse<OrderPrice>, PriceLevel>> {
 pub struct PriceLevel {
     order_ids: VecDeque<OrderId>,
     quantity: OrderQuantity,
-    price: OrderPrice
+    price: OrderPrice,
 }
 
 impl PriceLevel {
@@ -106,7 +111,7 @@ impl PriceLevel {
         Self {
             order_ids: VecDeque::new(),
             quantity: Decimal::zero(),
-            price
+            price,
         }
     }
 
@@ -118,9 +123,13 @@ impl PriceLevel {
     pub fn remove(&mut self, order: &Order) {
         self.quantity -= order.get_remaining_quantity();
 
-        if let Some(index) = self.order_ids.iter().position(|&order_id| order_id == order.get_id()) {
+        if let Some(index) = self
+            .order_ids
+            .iter()
+            .position(|&order_id| order_id == order.get_id())
+        {
             self.order_ids.remove(index);
-        } 
+        }
     }
 
     pub fn pop_front_order_id(&mut self) -> Option<OrderId> {
@@ -139,9 +148,9 @@ impl PriceLevel {
         match order.get_limit_price() {
             Some(limit_price) => match order.get_side() {
                 OrderSide::Ask => limit_price <= self.price,
-                OrderSide::Bid => limit_price >= self.price
-            }
-            None => true
+                OrderSide::Bid => limit_price >= self.price,
+            },
+            None => true,
         }
     }
 }
@@ -153,7 +162,7 @@ pub type OrdersIndex = HashMap<OrderId, Order>;
 pub struct Orderbook {
     asks: AsksOrderbook,
     bids: BidsOrderbook,
-    orders: OrdersIndex
+    orders: OrdersIndex,
 }
 
 impl Orderbook {
@@ -161,14 +170,18 @@ impl Orderbook {
         Self {
             asks: OrderbookWrapper(BTreeMap::new()),
             bids: OrderbookWrapper(BTreeMap::new()),
-            orders: HashMap::new()
+            orders: HashMap::new(),
         }
     }
 
     pub fn remove_drained_orderbook_level(&mut self, order: &Order) {
         match order.get_side() {
-            OrderSide::Ask => {self.bids.pop_first();},
-            OrderSide::Bid => {self.asks.pop_first();}
+            OrderSide::Ask => {
+                self.bids.pop_first();
+            }
+            OrderSide::Bid => {
+                self.asks.pop_first();
+            }
         };
     }
 
@@ -188,7 +201,8 @@ impl Orderbook {
             for order_id in price_level.order_ids.iter_mut() {
                 let maker_order = self
                     .orders
-                    .get_mut(&order_id).ok_or(AppError::OrderMatchNotFound)?;
+                    .get_mut(&order_id)
+                    .ok_or(AppError::OrderMatchNotFound)?;
 
                 let traded_quantity = taker_order.get_traded_quantity(&maker_order);
 
@@ -212,7 +226,8 @@ impl Orderbook {
             price_level.quantity -= total_traded_quantity;
 
             for _ in 0..filled_orders_count {
-                price_level.pop_front_order_id()
+                price_level
+                    .pop_front_order_id()
                     .and_then(|order_id| self.orders.remove(&order_id));
             }
 
@@ -235,7 +250,7 @@ impl Orderbook {
         Ok(MatchOrderOutput {
             taker_order: taker_order.clone(),
             filled_orders,
-            trades
+            trades,
         })
     }
 
@@ -255,7 +270,8 @@ impl Orderbook {
             for order_id in price_level.order_ids.iter_mut() {
                 let maker_order = self
                     .orders
-                    .get_mut(&order_id).ok_or(AppError::OrderMatchNotFound)?;
+                    .get_mut(&order_id)
+                    .ok_or(AppError::OrderMatchNotFound)?;
 
                 let traded_quantity = taker_order.get_traded_quantity(&maker_order);
 
@@ -279,7 +295,8 @@ impl Orderbook {
             price_level.quantity -= total_traded_quantity;
 
             for _ in 0..filled_orders_count {
-                price_level.pop_front_order_id()
+                price_level
+                    .pop_front_order_id()
                     .and_then(|order_id| self.orders.remove(&order_id));
             }
 
@@ -302,7 +319,7 @@ impl Orderbook {
         Ok(MatchOrderOutput {
             taker_order: taker_order.clone(),
             filled_orders,
-            trades
+            trades,
         })
     }
 
@@ -316,7 +333,7 @@ impl Orderbook {
                 let match_result = self.match_ask_order(order)?;
 
                 Ok(match_result)
-            },
+            }
             OrderSide::Bid => {
                 let match_result = self.match_bid_order(order)?;
 
@@ -326,14 +343,14 @@ impl Orderbook {
     }
 
     pub fn handle_cancel(&mut self, order_id: OrderId) -> AppResult<()> {
-        let order = self.
-            orders
+        let order = self
+            .orders
             .remove(&order_id)
             .ok_or(AppError::OrderIdNotFound)?;
 
         match order.get_side() {
             OrderSide::Ask => self.asks.remove(&order)?,
-            OrderSide::Bid => self.bids.remove(&order)?
+            OrderSide::Bid => self.bids.remove(&order)?,
         }
 
         Ok(())
@@ -346,10 +363,28 @@ impl Orderbook {
     pub fn is_bids_empty(&self) -> bool {
         self.bids.is_empty()
     }
+
+    pub fn get_asks_depth(&self) -> OrderbookDepth {
+        let depth: Vec<[Decimal; 2]> = self.asks.iter().map(|(price, level)| {
+            [price.clone(), level.quantity.clone()]
+        }).collect();
+
+        depth
+    }
+
+    pub fn get_bids_depth(&self) -> OrderbookDepth {
+        let depth: Vec<[Decimal; 2]> = self.bids.iter().map(|(price, level)| {
+            [price.0.clone(), level.quantity.clone()]
+        }).collect();
+
+        depth
+    }
 }
+
+pub type OrderbookDepth = Vec<[Decimal; 2]>;
 
 pub struct MatchOrderOutput {
     pub taker_order: Order,
     pub filled_orders: Vec<Order>,
-    pub trades: Vec<Trade>
+    pub trades: Vec<Trade>,
 }
