@@ -4,7 +4,7 @@ use rust_decimal::Decimal;
 
 use crate::common::{errors::{AppError, AppResult}, time::{Time, Timestamp}};
 
-use super::{AssetId, BalanceSourceExector, BalanceType, UserId};
+use super::{AssetId, BalanceSourceExector, BalanceStatus, BalanceType, UserId};
 
 pub type BalanceSource = Box<dyn BalanceSourceExector>;
 
@@ -58,6 +58,10 @@ impl BalanceService {
         }
 
         true
+    }
+
+    pub fn get_balance_status(&self, user_id: UserId, asset_id: AssetId) -> BalanceStatus {
+        self.source.get_status(user_id, asset_id)
     }
 
     pub fn change_balance(&self, input: ChangeBalaneInput) -> AppResult<ChangeBalanceOutput> {

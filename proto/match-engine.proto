@@ -1,8 +1,8 @@
-syntax = "proto3"
+syntax = "proto3";
 
 package match_engine;
 
-service Engine {
+service Trade {
     rpc GetUserBalance(GetUserBalanceRequest) returns (GetUserBalanceResponse);
     rpc ChangeUserBalance(ChangeUserBalanceRequest) returns (ChangeUserBalanceResponse);
     rpc PlaceOrder(PlaceOrderRequest) returns (PlaceOrderResponse);
@@ -10,8 +10,8 @@ service Engine {
 }
 
 enum OrderSide {
-    ASK = 1;
-    BID = 2;
+    ASK = 0;
+    BID = 1;
 }
 
 message PriceLevel {
@@ -56,6 +56,6 @@ message GetMarketOrderbookRequest {
 }
 
 message GetMarketOrderbookResponse {
-    PriceLevel bids repeated
-    PriceLevel asks repeated
+    repeated PriceLevel bids = 1;
+    repeated PriceLevel asks = 2;
 }

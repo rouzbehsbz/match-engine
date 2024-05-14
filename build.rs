@@ -3,6 +3,6 @@ fn main() {
 
     match compile_result {
         Ok(_) => {},
-        Err(err) => eprintln!("Compile proto files failed due to: {}", err)
+        Err(err) => panic!("Compile proto files failed due to: {}", err)
     }
 }

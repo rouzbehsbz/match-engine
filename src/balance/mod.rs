@@ -19,7 +19,7 @@ pub struct BalanceStatus {
     pub frozen: Decimal
 }
 
-pub trait BalanceSourceExector {
+pub trait BalanceSourceExector: Send + Sync {
     fn get(&self, user_id: UserId, type_: BalanceType, asset_id: AssetId) -> Decimal;
     fn increase(&self, user_id: UserId, type_: BalanceType, asset_id: AssetId, amount: Decimal);
     fn decrease(&self, user_id: UserId, type_: BalanceType, asset_id: AssetId, amount: Decimal);
