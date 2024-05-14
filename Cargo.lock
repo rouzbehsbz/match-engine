@@ -525,6 +525,7 @@ version = "0.1.0"
 dependencies = [
  "prost",
  "rust_decimal",
+ "serde",
  "thiserror",
  "tokio",
  "toml",

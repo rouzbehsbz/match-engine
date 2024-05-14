@@ -3,9 +3,7 @@ use std::sync::Arc;
 use crate::{
     balance::{
         repositories::memory::MemoryBalanceManager, service::BalanceService, BalanceSourceExector,
-    },
-    config::service::ConfigService,
-    engine::service::EngineService,
+    }, config::Config, engine::service::EngineService
 };
 
 pub struct Container {
@@ -14,14 +12,14 @@ pub struct Container {
 }
 
 impl Container {
-    pub fn new(config_service: &ConfigService) -> Self {
+    pub fn new(config: &Config) -> Self {
         let balance_source: Arc<Box<dyn BalanceSourceExector>> =
             Arc::new(Box::new(MemoryBalanceManager::new()));
         let balance_service = Arc::new(BalanceService::new(balance_source.clone()));
 
         let mut engine_service = EngineService::new(balance_service.clone());
 
-        engine_service.insert_markets_from_config(config_service);
+        engine_service.insert_markets_from_config(config);
 
         Self {
             balance_service,

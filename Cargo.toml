@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 prost = "0.12.4"
 rust_decimal = "1.35.0"
+serde = {version = "1.0.201", features = ["derive"]}
 thiserror = "1.0.60"
 tokio = {version = "1.37.0", features = ["macros", "rt-multi-thread"]}
 toml = "0.8.12"

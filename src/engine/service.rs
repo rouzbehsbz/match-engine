@@ -9,7 +9,7 @@ use rust_decimal::{prelude::Zero, Decimal};
 use crate::{
     balance::{service::BalanceService, UserId},
     common::errors::{AppError, AppResult},
-    config::{self, service::ConfigService},
+    config::Config,
 };
 
 use super::models::{
@@ -33,10 +33,10 @@ impl EngineService {
         }
     }
 
-    pub fn insert_markets_from_config(&mut self, config_service: &ConfigService) {
+    pub fn insert_markets_from_config(&mut self, config: &Config) {
         let mut write_guard = self.markets.try_write().unwrap();
 
-        for market_config in &config_service.markets {
+        for market_config in &config.markets {
             let market = Market::new(
                 market_config.base_asset_id,
                 market_config.quote_asset_id,
