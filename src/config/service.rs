@@ -7,17 +7,15 @@ pub struct MarketConfig {
     pub base_asset_id: AssetId,
     pub quote_asset_id: AssetId,
     pub is_market_trade_enabled: bool,
-    pub min_allowed_quantity: Decimal
+    pub min_allowed_quantity: Decimal,
 }
 
 pub struct ConfigService {
-    pub markets: Vec<MarketConfig>
+    pub markets: Vec<MarketConfig>,
 }
 
 impl ConfigService {
     pub fn new() -> Self {
-        Self {
-            markets: vec![]
-        }
+        Self { markets: vec![] }
     }
 }

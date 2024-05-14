@@ -3,13 +3,21 @@ use std::{str::FromStr, sync::Arc};
 use rust_decimal::Decimal;
 use tonic::{Request, Response};
 
-use crate::{balance::{
-    service::{BalanceService, BusinessType},
-    BalanceType,
-}, engine::{models::order::{OrderPrice, OrderSide}, service::EngineService}};
+use crate::{
+    balance::{
+        service::{BalanceService, BusinessType},
+        BalanceType,
+    },
+    engine::{
+        models::order::{OrderPrice, OrderSide},
+        service::EngineService,
+    },
+};
 
 use self::match_engine::{
-    trade_server::Trade, DepositRequest, DepositResponse, GetMarketOrderbookRequest, GetMarketOrderbookResponse, GetUserBalanceRequest, GetUserBalanceResponse, PlaceOrderRequest, PlaceOrderResponse, PriceLevel, WithdrawRequest, WithdrawResponse
+    trade_server::Trade, DepositRequest, DepositResponse, GetMarketOrderbookRequest,
+    GetMarketOrderbookResponse, GetUserBalanceRequest, GetUserBalanceResponse, PlaceOrderRequest,
+    PlaceOrderResponse, PriceLevel, WithdrawRequest, WithdrawResponse,
 };
 
 use super::GrpcResult;
@@ -25,7 +33,10 @@ pub struct MatchEngineController {
 
 impl MatchEngineController {
     pub fn new(engine_service: Arc<EngineService>, balance_service: Arc<BalanceService>) -> Self {
-        Self { engine_service, balance_service }
+        Self {
+            engine_service,
+            balance_service,
+        }
     }
 }
 
@@ -50,42 +61,40 @@ impl Trade for MatchEngineController {
         Ok(Response::new(response))
     }
 
-    async fn withdraw(
-        &self,
-        request: Request<WithdrawRequest>,
-    ) -> GrpcResult<WithdrawResponse> {
+    async fn withdraw(&self, request: Request<WithdrawRequest>) -> GrpcResult<WithdrawResponse> {
         let request = request.into_inner();
         let amount = Decimal::from_str(&request.amount).unwrap();
 
-        self.balance_service.change_balance(
-            request.user_id,
-            request.asset_id,
-            BusinessType::Withdraw,
-            1,
-            BalanceType::Available,
-            amount,
-        ).unwrap();
+        self.balance_service
+            .change_balance(
+                request.user_id,
+                request.asset_id,
+                BusinessType::Withdraw,
+                1,
+                BalanceType::Available,
+                amount,
+            )
+            .unwrap();
 
-        Ok(Response::new(WithdrawResponse {  }))
+        Ok(Response::new(WithdrawResponse {}))
     }
 
-    async fn deposit(
-        &self,
-        request: Request<DepositRequest>,
-    ) -> GrpcResult<DepositResponse> {
+    async fn deposit(&self, request: Request<DepositRequest>) -> GrpcResult<DepositResponse> {
         let request = request.into_inner();
         let amount = Decimal::from_str(&request.amount).unwrap();
 
-        self.balance_service.change_balance(
-            request.user_id,
-            request.asset_id,
-            BusinessType::Deposit,
-            1,
-            BalanceType::Available,
-            -amount,
-        ).unwrap();
+        self.balance_service
+            .change_balance(
+                request.user_id,
+                request.asset_id,
+                BusinessType::Deposit,
+                1,
+                BalanceType::Available,
+                -amount,
+            )
+            .unwrap();
 
-        Ok(Response::new(DepositResponse {  }))
+        Ok(Response::new(DepositResponse {}))
     }
 
     async fn place_order(
@@ -96,18 +105,26 @@ impl Trade for MatchEngineController {
 
         let limit_price: Option<OrderPrice> = match request.limit_price.is_empty() {
             true => None,
-            false => Some(Decimal::from_str(&request.limit_price).unwrap())
+            false => Some(Decimal::from_str(&request.limit_price).unwrap()),
         };
         let quantity = Decimal::from_str(&request.quantity).unwrap();
 
         let order_side = match request.side {
             0 => OrderSide::Ask,
             1 => OrderSide::Bid,
-            _ => OrderSide::Ask
+            _ => OrderSide::Ask,
         };
 
-        self.engine_service.place_order(request.pair_id, request.user_id, limit_price, quantity, order_side).unwrap();
-    
+        self.engine_service
+            .place_order(
+                request.pair_id,
+                request.user_id,
+                limit_price,
+                quantity,
+                order_side,
+            )
+            .unwrap();
+
         Ok(Response::new(PlaceOrderResponse { order_id: 0 }))
     }
 
@@ -119,18 +136,23 @@ impl Trade for MatchEngineController {
 
         let (asks_depth, bids_depth) = self.engine_service.get_market_orderbook(request.pair_id);
 
-        let asks: Vec<PriceLevel> = asks_depth.iter().map(|value| {
-            PriceLevel { price: value[0].to_string(), quantity: value[1].to_string() }
-        }).collect();
+        let asks: Vec<PriceLevel> = asks_depth
+            .iter()
+            .map(|value| PriceLevel {
+                price: value[0].to_string(),
+                quantity: value[1].to_string(),
+            })
+            .collect();
 
-        let bids: Vec<PriceLevel> = bids_depth.iter().map(|value| {
-            PriceLevel { price: value[0].to_string(), quantity: value[1].to_string() }
-        }).collect();
+        let bids: Vec<PriceLevel> = bids_depth
+            .iter()
+            .map(|value| PriceLevel {
+                price: value[0].to_string(),
+                quantity: value[1].to_string(),
+            })
+            .collect();
 
-        let response = GetMarketOrderbookResponse {
-            asks,
-            bids
-        };
+        let response = GetMarketOrderbookResponse { asks, bids };
 
         Ok(Response::new(response))
     }

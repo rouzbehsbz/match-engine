@@ -365,17 +365,21 @@ impl Orderbook {
     }
 
     pub fn get_asks_depth(&self) -> OrderbookDepth {
-        let depth: Vec<[Decimal; 2]> = self.asks.iter().map(|(price, level)| {
-            [price.clone(), level.quantity.clone()]
-        }).collect();
+        let depth: Vec<[Decimal; 2]> = self
+            .asks
+            .iter()
+            .map(|(price, level)| [price.clone(), level.quantity.clone()])
+            .collect();
 
         depth
     }
 
     pub fn get_bids_depth(&self) -> OrderbookDepth {
-        let depth: Vec<[Decimal; 2]> = self.bids.iter().map(|(price, level)| {
-            [price.0.clone(), level.quantity.clone()]
-        }).collect();
+        let depth: Vec<[Decimal; 2]> = self
+            .bids
+            .iter()
+            .map(|(price, level)| [price.0.clone(), level.quantity.clone()])
+            .collect();
 
         depth
     }
