@@ -45,4 +45,7 @@ pub enum AppError {
 
     #[error("Order amount for makrket order is invalid.")]
     InvalidMarketOrderAmount,
+
+    #[error("Market with this pair ID does'nt found.")]
+    MarketNotFound
 }

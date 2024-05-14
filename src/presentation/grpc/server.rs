@@ -1,18 +1,15 @@
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
+use rust_decimal::Decimal;
 use tonic::{Request, Response};
 
 use crate::{balance::{
     service::{BalanceService, BusinessType},
     BalanceType,
-}, engine::service::EngineService};
+}, engine::{order::{OrderPrice, OrderSide}, service::EngineService}};
 
 use self::match_engine::{
-    trade_server::Trade,
-    WithdrawRequest, WithdrawResponse,
-    DepositRequest, DepositResponse,
-    GetMarketOrderbookRequest, GetMarketOrderbookResponse, GetUserBalanceRequest,
-    GetUserBalanceResponse, PlaceOrderRequest, PlaceOrderResponse,
+    trade_server::Trade, DepositRequest, DepositResponse, GetMarketOrderbookRequest, GetMarketOrderbookResponse, GetUserBalanceRequest, GetUserBalanceResponse, PlaceOrderRequest, PlaceOrderResponse, PriceLevel, WithdrawRequest, WithdrawResponse
 };
 
 use super::GrpcResult;
@@ -45,9 +42,9 @@ impl Trade for MatchEngineController {
             .get_balance_status(request.user_id, request.asset_id);
 
         let response = GetUserBalanceResponse {
-            total: balance_status.total,
-            available: balance_status.available,
-            frozen: balance_status.frozen,
+            total: balance_status.total.to_string(),
+            available: balance_status.available.to_string(),
+            frozen: balance_status.frozen.to_string(),
         };
 
         Ok(Response::new(response))
@@ -58,6 +55,7 @@ impl Trade for MatchEngineController {
         request: Request<WithdrawRequest>,
     ) -> GrpcResult<WithdrawResponse> {
         let request = request.into_inner();
+        let amount = Decimal::from_str(&request.amount).unwrap();
 
         self.balance_service.change_balance(
             request.user_id,
@@ -65,7 +63,7 @@ impl Trade for MatchEngineController {
             BusinessType::Withdraw,
             1,
             BalanceType::Available,
-            request.amount,
+            amount,
         ).unwrap();
 
         Ok(Response::new(WithdrawResponse {  }))
@@ -76,6 +74,7 @@ impl Trade for MatchEngineController {
         request: Request<DepositRequest>,
     ) -> GrpcResult<DepositResponse> {
         let request = request.into_inner();
+        let amount = Decimal::from_str(&request.amount).unwrap();
 
         self.balance_service.change_balance(
             request.user_id,
@@ -83,7 +82,7 @@ impl Trade for MatchEngineController {
             BusinessType::Deposit,
             1,
             BalanceType::Available,
-            -request.amount,
+            -amount,
         ).unwrap();
 
         Ok(Response::new(DepositResponse {  }))
@@ -93,7 +92,23 @@ impl Trade for MatchEngineController {
         &self,
         request: Request<PlaceOrderRequest>,
     ) -> GrpcResult<PlaceOrderResponse> {
-        todo!()
+        let request = request.into_inner();
+
+        let limit_price: Option<OrderPrice> = match request.limit_price.is_empty() {
+            true => None,
+            false => Some(Decimal::from_str(&request.limit_price).unwrap())
+        };
+        let quantity = Decimal::from_str(&request.quantity).unwrap();
+
+        let order_side = match request.side {
+            0 => OrderSide::Ask,
+            1 => OrderSide::Bid,
+            _ => OrderSide::Ask
+        };
+
+        self.engine_service.place_order(request.pair_id, request.user_id, limit_price, quantity, order_side).unwrap();
+    
+        Ok(Response::new(PlaceOrderResponse { order_id: 0 }))
     }
 
     async fn get_market_orderbook(
@@ -104,9 +119,17 @@ impl Trade for MatchEngineController {
 
         let (asks_depth, bids_depth) = self.engine_service.get_market_orderbook(request.pair_id);
 
+        let asks: Vec<PriceLevel> = asks_depth.iter().map(|value| {
+            PriceLevel { price: value[0].to_string(), quantity: value[1].to_string() }
+        }).collect();
+
+        let bids: Vec<PriceLevel> = bids_depth.iter().map(|value| {
+            PriceLevel { price: value[0].to_string(), quantity: value[1].to_string() }
+        }).collect();
+
         let response = GetMarketOrderbookResponse {
-            asks: asks_depth,
-            bids: bids_depth
+            asks,
+            bids
         };
 
         Ok(Response::new(response))
