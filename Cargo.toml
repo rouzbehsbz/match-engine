@@ -7,6 +7,7 @@ edition = "2021"
 prost = "0.12.4"
 rust_decimal = "1.35.0"
 thiserror = "1.0.60"
+tokio = {version = "1.37.0", features = ["macros", "rt-multi-thread"]}
 tonic = "0.11.0"
 
 [build-dependencies]
