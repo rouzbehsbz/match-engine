@@ -100,6 +100,7 @@ impl OrderbookWrapper<BTreeMap<Reverse<OrderPrice>, PriceLevel>> {
     }
 }
 
+#[derive(Debug)]
 pub struct PriceLevel {
     order_ids: VecDeque<OrderId>,
     quantity: OrderQuantity,
@@ -312,7 +313,7 @@ impl Orderbook {
         if !taker_order.is_closed() && taker_order.is_bookable() {
             taker_order.set_frozen_amount()?;
 
-            self.bids.insert(&taker_order)?;
+            self.asks.insert(&taker_order)?;
             self.orders.insert(taker_order.get_id(), taker_order);
         }
 

@@ -8,7 +8,7 @@ use rust_decimal::{prelude::Zero, Decimal};
 
 use crate::{
     balance::{service::BalanceService, UserId},
-    common::errors::{AppError, AppResult},
+    common::{errors::{AppError, AppResult}, sequencer::Sequencer},
     config::Config,
 };
 
@@ -43,6 +43,7 @@ impl EngineService {
                 market_config.is_market_trade_enabled,
                 market_config.min_allowed_quantity,
                 self.balance_service.clone(),
+                Arc::new(Sequencer::new())
             );
 
             write_guard.insert(market_config.pair_id, market);
@@ -54,7 +55,10 @@ impl EngineService {
             return market.get_orderbook_depth();
         }
 
-        (vec![], vec![])
+        (
+            vec![],
+            vec![],
+        )
     }
 
     pub fn place_order(
@@ -68,7 +72,7 @@ impl EngineService {
         if let Some(market) = self.markets.try_write().unwrap().get_mut(&pair_id) {
             market.process_new_order(user_id, limit_price, quantity, side)?;
 
-            return Ok(());
+            return Ok(())
         }
 
         Err(AppError::MarketNotFound)

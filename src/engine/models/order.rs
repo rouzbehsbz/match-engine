@@ -47,6 +47,7 @@ pub struct Order {
 
 impl Order {
     pub fn new_limit(
+        id: OrderId,
         user_id: UserId,
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
@@ -55,7 +56,7 @@ impl Order {
         quantity: OrderQuantity,
     ) -> Self {
         Self {
-            id: 0,
+            id,
             user_id,
             base_asset_id,
             quote_asset_id,
@@ -69,6 +70,7 @@ impl Order {
     }
 
     pub fn new_market(
+        id: OrderId,
         user_id: UserId,
         base_asset_id: AssetId,
         quote_asset_id: AssetId,
@@ -76,7 +78,7 @@ impl Order {
         quantity: OrderQuantity,
     ) -> Self {
         Self {
-            id: 0,
+            id,
             user_id,
             base_asset_id,
             quote_asset_id,
@@ -103,7 +105,7 @@ impl Order {
 
     pub fn get_asset_id(&self) -> AssetId {
         match self.get_side() {
-            OrderSide::Ask => self.get_asset_id(),
+            OrderSide::Ask => self.get_base_asset_id(),
             OrderSide::Bid => self.get_quote_asset_id(),
         }
     }

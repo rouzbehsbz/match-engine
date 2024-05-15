@@ -5,7 +5,7 @@ use crate::{
         service::{BalanceService, BusinessType},
         AssetId, BalanceType, UserId,
     },
-    common::errors::{AppError, AppResult},
+    common::{errors::{AppError, AppResult}, sequencer::Sequencer},
 };
 
 use super::{
@@ -23,6 +23,7 @@ pub struct Market {
     min_allowed_quantity: OrderQuantity,
 
     orderbook: Orderbook,
+    order_id_sequencer: Arc<Sequencer>,
     balance_service: Arc<BalanceService>,
 }
 
@@ -33,6 +34,7 @@ impl Market {
         is_market_trade_enabled: bool,
         min_allowed_quantity: OrderQuantity,
         balance_service: Arc<BalanceService>,
+        order_id_sequencer: Arc<Sequencer>
     ) -> Self {
         Self {
             base_asset_id,
@@ -42,6 +44,7 @@ impl Market {
 
             is_market_trade_enabled,
             min_allowed_quantity,
+            order_id_sequencer
         }
     }
 
@@ -208,6 +211,7 @@ impl Market {
     ) -> AppResult<()> {
         let order = match limit_price {
             Some(limit_price) => Order::new_limit(
+                self.order_id_sequencer.next(),
                 user_id,
                 self.base_asset_id,
                 self.quote_asset_id,
@@ -216,6 +220,7 @@ impl Market {
                 quantity,
             ),
             None => Order::new_market(
+                self.order_id_sequencer.next(),
                 user_id,
                 self.base_asset_id,
                 self.quote_asset_id,

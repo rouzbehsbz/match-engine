@@ -3,9 +3,7 @@ use std::sync::Arc;
 use crate::{
     balance::{
         repositories::memory::MemoryBalanceManager, service::BalanceService, BalanceSourceExector,
-    },
-    config::Config,
-    engine::service::EngineService,
+    }, common::sequencer::Sequencer, config::Config, engine::service::EngineService
 };
 
 pub struct Container {
