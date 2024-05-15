@@ -11,7 +11,7 @@ impl TomlConfigManager {
 
         file.read_to_string(&mut buf).unwrap();
 
-        let config: Config = toml::from_str(&buf).unwrap(); 
+        let config: Config = toml::from_str(&buf).unwrap();
 
         config
     }

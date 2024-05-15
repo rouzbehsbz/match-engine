@@ -7,7 +7,7 @@ pub mod repositories;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
-    pub markets: Vec<MarketConfig>
+    pub markets: Vec<MarketConfig>,
 }
 
 #[derive(Debug, Deserialize)]

@@ -54,10 +54,7 @@ impl EngineService {
             return market.get_orderbook_depth();
         }
 
-        (
-            vec![[Decimal::zero(), Decimal::zero()]],
-            vec![[Decimal::zero(), Decimal::zero()]],
-        )
+        (vec![], vec![])
     }
 
     pub fn place_order(
@@ -71,7 +68,7 @@ impl EngineService {
         if let Some(market) = self.markets.try_write().unwrap().get_mut(&pair_id) {
             market.process_new_order(user_id, limit_price, quantity, side)?;
 
-            return Ok(())
+            return Ok(());
         }
 
         Err(AppError::MarketNotFound)

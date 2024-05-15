@@ -21,12 +21,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let contaienr = Container::new(&config);
 
     Server::builder()
-        .add_service(TradeServer::new(
-            TradeController::new(
-                contaienr.engine_service,
-                contaienr.balance_service
-            )
-        ))
+        .add_service(TradeServer::new(TradeController::new(
+            contaienr.engine_service,
+            contaienr.balance_service,
+        )))
         .serve("0.0.0.0:3000".parse()?)
         .await?;
 
