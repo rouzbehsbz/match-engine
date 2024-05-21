@@ -340,4 +340,28 @@ mod tests {
         assert_eq!(orderbook.get_bids_depth(), vec![[Decimal::from(50), Decimal::from(300)], [Decimal::from(20), Decimal::from(200)]]);
         assert!(orderbook.get_asks_depth().is_empty());
     }
+
+    #[test]
+    #[should_panic]
+    // Cancel limit order in empty order book. Cancel request rejected
+    fn cancel_order_should_panic_for_empty_orderbook() {
+        let mut orderbook = new_empty_orderbook();
+
+        orderbook.cancel_order(0).unwrap()
+    }
+
+    #[test]
+    // Cancel limit order. order removed
+    fn cancel_order_for_orderbook_order_removed() {
+        let mut orderbook = new_empty_orderbook();
+
+        orderbook.put_order(new_limit_order(0, OrderSide::Bid, Decimal::from(100), Decimal::from(1000))).unwrap();
+        orderbook.put_order(new_limit_order(1, OrderSide::Bid, Decimal::from(105), Decimal::from(2000))).unwrap();
+        orderbook.put_order(new_limit_order(2, OrderSide::Bid, Decimal::from(107), Decimal::from(3000))).unwrap();
+
+        orderbook.cancel_order(1).unwrap();
+
+        assert_eq!(orderbook.get_bids_depth(), vec![[Decimal::from(107), Decimal::from(3000)], [Decimal::from(100), Decimal::from(1000)]]);
+        assert!(orderbook.get_asks_depth().is_empty());
+    }
 }
