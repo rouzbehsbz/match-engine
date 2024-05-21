@@ -5,7 +5,10 @@ use crate::{
         service::{BalanceService, BusinessType},
         AssetId, BalanceType, UserId,
     },
-    common::{errors::{AppError, AppResult}, sequencer::Sequencer},
+    common::{
+        errors::{AppError, AppResult},
+        sequencer::Sequencer,
+    },
 };
 
 use super::{
@@ -34,7 +37,7 @@ impl Market {
         is_market_trade_enabled: bool,
         min_allowed_quantity: OrderQuantity,
         balance_service: Arc<BalanceService>,
-        order_id_sequencer: Arc<Sequencer>
+        order_id_sequencer: Arc<Sequencer>,
     ) -> Self {
         Self {
             base_asset_id,
@@ -44,7 +47,7 @@ impl Market {
 
             is_market_trade_enabled,
             min_allowed_quantity,
-            order_id_sequencer
+            order_id_sequencer,
         }
     }
 
@@ -111,7 +114,7 @@ impl Market {
             BusinessType::Trade,
             trade.get_id(),
             BalanceType::Available,
-            trade.get_trade_quantity(),
+            trade.get_quantity(),
         )?;
 
         self.balance_service.change_balance(
@@ -123,7 +126,7 @@ impl Market {
                 true => BalanceType::Frozen,
                 false => BalanceType::Available,
             },
-            -trade.get_trade_amount(),
+            -trade.get_amount(),
         )?;
 
         self.balance_service.change_balance(
@@ -132,7 +135,7 @@ impl Market {
             BusinessType::Trade,
             trade.get_id(),
             BalanceType::Available,
-            trade.get_trade_amount(),
+            trade.get_amount(),
         )?;
 
         self.balance_service.change_balance(
@@ -144,7 +147,7 @@ impl Market {
                 true => BalanceType::Available,
                 false => BalanceType::Frozen,
             },
-            -trade.get_trade_quantity(),
+            -trade.get_quantity(),
         )?;
 
         Ok(())
@@ -231,7 +234,7 @@ impl Market {
 
         self.check_new_order_input(&order)?;
 
-        let match_result = self.orderbook.handle_create(order)?;
+        let match_result = self.orderbook.put_order(order)?;
 
         for trade in match_result.trades {
             self.transfer_trade_balance(&trade)?;

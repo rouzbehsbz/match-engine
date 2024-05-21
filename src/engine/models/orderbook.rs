@@ -192,7 +192,7 @@ impl Orderbook {
         let mut drained_price_levels = 0;
 
         for (_, price_level) in self.asks.iter_mut() {
-            if taker_order.is_closed() || !price_level.is_matches(&taker_order) {
+            if !price_level.is_matches(&taker_order) {
                 break;
             }
 
@@ -200,6 +200,10 @@ impl Orderbook {
             let mut filled_orders_count = 0;
 
             for order_id in price_level.order_ids.iter_mut() {
+                if taker_order.is_closed() {
+                    break;
+                }
+
                 let maker_order = self
                     .orders
                     .get_mut(&order_id)
@@ -261,7 +265,7 @@ impl Orderbook {
         let mut drained_price_levels = 0;
 
         for (_, price_level) in self.bids.iter_mut() {
-            if taker_order.is_closed() || !price_level.is_matches(&taker_order) {
+            if !price_level.is_matches(&taker_order) {
                 break;
             }
 
@@ -269,6 +273,10 @@ impl Orderbook {
             let mut filled_orders_count = 0;
 
             for order_id in price_level.order_ids.iter_mut() {
+                if taker_order.is_closed() {
+                    break;
+                }
+
                 let maker_order = self
                     .orders
                     .get_mut(&order_id)
@@ -324,7 +332,7 @@ impl Orderbook {
         })
     }
 
-    pub fn handle_create(&mut self, order: Order) -> AppResult<MatchOrderOutput> {
+    pub fn put_order(&mut self, order: Order) -> AppResult<MatchOrderOutput> {
         // if self.orders.contains_key(&order.get_id()) {
         //     return Err(AppError::OrderIdDuplication)
         // }
@@ -343,7 +351,7 @@ impl Orderbook {
         }
     }
 
-    pub fn handle_cancel(&mut self, order_id: OrderId) -> AppResult<()> {
+    pub fn cancel_order(&mut self, order_id: OrderId) -> AppResult<()> {
         let order = self
             .orders
             .remove(&order_id)

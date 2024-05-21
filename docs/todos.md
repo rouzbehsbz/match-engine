@@ -12,3 +12,4 @@
 - If engine runs in single thread. conside using `Rc` over `Arc`
 - Find a way to create cleaner test environment
 - Consider using `#[inline]` for methods when needed
+- Proper Error handling

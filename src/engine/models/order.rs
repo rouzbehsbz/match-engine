@@ -10,19 +10,19 @@ pub type OrderPrice = Decimal;
 pub type OrderQuantity = Decimal;
 pub type OrderAmount = Decimal;
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum OrderType {
     Limit { price: OrderPrice },
     Market,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum OrderSide {
     Ask,
     Bid,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum OrderStatus {
     Open,
     PartiallyFilled,
@@ -31,7 +31,7 @@ pub enum OrderStatus {
     Filled,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct Order {
     id: OrderId,
     user_id: UserId,

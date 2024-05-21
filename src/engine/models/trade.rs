@@ -6,6 +6,7 @@ use super::order::{Order, OrderPrice, OrderQuantity, OrderSide};
 
 pub type TradeId = u64;
 
+#[derive(Debug)]
 pub struct Trade {
     id: TradeId,
     taker_order: Order,
@@ -37,6 +38,10 @@ impl Trade {
         self.id
     }
 
+    pub fn get_price(&self) -> OrderPrice {
+        self.price
+    }
+
     pub fn get_maker_order_side(&self) -> OrderSide {
         self.maker_order.get_side()
     }
@@ -55,11 +60,11 @@ impl Trade {
         }
     }
 
-    pub fn get_trade_quantity(&self) -> OrderQuantity {
+    pub fn get_quantity(&self) -> OrderQuantity {
         self.quantity
     }
 
-    pub fn get_trade_amount(&self) -> Decimal {
+    pub fn get_amount(&self) -> Decimal {
         self.quantity * self.price
     }
 }

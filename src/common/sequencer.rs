@@ -1,13 +1,13 @@
 use std::sync::atomic::{AtomicU64, Ordering};
 
 pub struct Sequencer {
-    index: AtomicU64
+    index: AtomicU64,
 }
 
 impl Sequencer {
     pub fn new() -> Self {
         Self {
-            index: AtomicU64::new(0)
+            index: AtomicU64::new(0),
         }
     }
 
